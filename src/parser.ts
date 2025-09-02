@@ -1,7 +1,6 @@
-import axios from "axios";
+import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 import { ButtonStatus, ParseResult } from "./types";
-import fs from "fs/promises";
 
 const BASE_URL = "https://fckairat.com/match";
 const MATCH_BLOCK_SELECTOR = ".match-block";
@@ -15,17 +14,24 @@ const TEAM_NAME_SELECTOR = ".match-block__name";
 export async function parseButtons(): Promise<ParseResult> {
     try {
         console.log("Fetching page:", BASE_URL);
-        const response = await axios.get(BASE_URL, {
-            timeout: 10000,
+        const response = await fetch(BASE_URL, {
             headers: {
                 "User-Agent":
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             },
         });
 
-        // const response = { data: await fs.readFile("kairat.html", "utf8") };
+        if (!response.ok) {
+            throw new Error(
+                `HTTP error: ${response.status} ${response.statusText}`,
+            );
+        }
 
-        const $ = cheerio.load(response.data);
+        const html = await response.text();
+
+        // const html = await fs.readFile("kairat.html", "utf8");
+
+        const $ = cheerio.load(html);
         const matchBlocks = $(MATCH_BLOCK_SELECTOR);
 
         console.log(`Found ${matchBlocks.length} match blocks`);
@@ -99,14 +105,6 @@ export async function parseButtons(): Promise<ParseResult> {
         console.log("Parse result:", result);
         return result;
     } catch (error) {
-        if (axios.isAxiosError(error)) {
-            const errorMessage = `HTTP error: ${error.message}${
-                error.response ? ` (Status: ${error.response.status})` : ""
-            }`;
-            console.error("Axios error:", errorMessage);
-            throw new Error(errorMessage);
-        }
-
         console.error("Parse error:", error);
         throw error;
     }

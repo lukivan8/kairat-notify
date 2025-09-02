@@ -1,6 +1,6 @@
-import fetch from "node-fetch";
 import * as cheerio from "cheerio";
 import { ButtonStatus, ParseResult } from "./types";
+import fs from "fs/promises";
 
 const BASE_URL = "https://fckairat.com/match";
 const MATCH_BLOCK_SELECTOR = ".match-block";
